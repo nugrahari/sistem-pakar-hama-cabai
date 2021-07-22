@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+
+    'channels',
     'rest_framework',
     'rest_framework.authtoken',
 
@@ -75,6 +77,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'mySite.wsgi.application'
+ASGI_APPLICATION = 'mySite.asgi.application'
 
 
 # Database
@@ -84,6 +87,15 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
+
+CHANNEL_LAYERS = {
+    'default'   :   {
+        'BACKEND'   :   'channels_redis.core.RedisChannelLayer',
+        'CONFIG'    : {
+            'hosts' :   [('127.0.0.1', 6379)]
+        }
     }
 }
 
