@@ -9,6 +9,8 @@ from app_cabai.api.views import(
 	SolusiDetailAPI,
 	PermasalahanAPI,
 	PermasalahanDetailAPI,
+	diagnosis,
+	input_cf_pengguna,
 )
 
 
@@ -24,4 +26,10 @@ urlpatterns = [
 
     path('api/PermasalahanAPI', PermasalahanAPI.as_view(), name='PermasalahanAPI'),
     path('api/PermasalahanAPI/<pk>', PermasalahanDetailAPI.as_view(), name='PermasalahanDetailAPI'),
+
+
+
+    path('api/input_cf_pengguna', input_cf_pengguna, name='input_cf_pengguna'),
+    path('api/diagnosis/<id_masalah>', diagnosis, name='diagnosis'),
+
 ]
