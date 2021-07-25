@@ -11,6 +11,9 @@ from app_cabai.api.views import(
 	PermasalahanDetailAPI,
 	diagnosis,
 	input_cf_pengguna,
+	CFPenggunaAPI,
+	CFPenggunaFilterAPI,
+	CFPenggunaDetailAPI
 )
 
 
@@ -27,6 +30,10 @@ urlpatterns = [
     path('api/PermasalahanAPI', PermasalahanAPI.as_view(), name='PermasalahanAPI'),
     path('api/PermasalahanAPI/<pk>', PermasalahanDetailAPI.as_view(), name='PermasalahanDetailAPI'),
 
+
+    path('api/CFPenggunaAPI', CFPenggunaAPI.as_view(), name='CFPenggunaAPI'),
+    path('api/CFPenggunaFilterAPI/<id>', CFPenggunaFilterAPI.as_view(), name='CFPenggunaFilterAPI'),
+    path('api/CFPenggunaAPI/<pk>', CFPenggunaDetailAPI.as_view(), name='CFPenggunaDetailAPI'),
 
 
     path('api/input_cf_pengguna', input_cf_pengguna, name='input_cf_pengguna'),

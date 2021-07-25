@@ -19,11 +19,11 @@ class HamaAdmin(admin.ModelAdmin):
 	search_fields = ['kode','nama','deskripsi']
 
 class SolusiAdmin(admin.ModelAdmin):
-	list_display = [field.name for field in Solusi._meta.get_fields()]
-	search_fields =  [field.name for field in Solusi._meta.get_fields()]
+	list_display = ['nama', 'deskripsi']
+	search_fields =  ['nama', 'deskripsi']
 
 class PermasalahanAdmin(admin.ModelAdmin):
-	list_display = ['nama_masalah', 'penjelasan']
+	list_display = ['id','nama_masalah', 'penjelasan']
 	search_fields = ['nama_masalah', 'penjelasan']
 
 # admin.site.register(JenisPenyakit)

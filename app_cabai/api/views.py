@@ -1,3 +1,4 @@
+import json
 from django.http import Http404
 from rest_framework import status
 from rest_framework.views import APIView
@@ -18,6 +19,10 @@ from .serializers import (
     HamaSerializer,
     SolusiSerializer,
     PermasalahanSerializer,
+
+    CFPakarSerializer,
+    CFPenggunaSerializer,
+    CFPenggunaSerializer2,
 )
 
 
@@ -203,12 +208,102 @@ class PermasalahanDetailAPI(APIView):
         snippet.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+# -----------------------------------------------------------------------------------------------------------------
 
+class CFPenggunaAPI(APIView):
+    """
+    List all snippets, or create a new snippet.
+    """
+    def get(self, request, format=None):
+        snippets = CFPengguna.objects.all()
+        serializer = CFPenggunaSerializer(snippets, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, format=None):
+        serializer = CFPenggunaSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+from rest_framework import generics
+
+class CFPenggunaFilterAPI(generics.ListAPIView):
+    """
+    List all snippets, or create a new snippet.
+    """
+    def get(self, request, *args, **kwargs):
+        id_masalah = self.kwargs['id']
+        # data_masalah = Permasalahan.objects.filter(id=id_masalah)
+        print(id_masalah)
+        snippets = CFPengguna.objects.filter(nama_masalah__id=id_masalah)
+        serializer = CFPenggunaSerializer2(snippets, many=True)
+        return Response(serializer.data, status=200)
+
+    def post(self, request, *args, **kwargs):
+        id_masalah = self.kwargs['id']
+        print(id_masalah)
+        id_hama = request.POST['id_hama']
+        value = request.POST['value']
+        data_masalah = Permasalahan.objects.get(id=id_masalah)
+        data_hama = Hama.objects.get(id=id_hama)
+        snippets = CFPengguna()
+        snippets.nama_masalah   = data_masalah
+        snippets.hama           = data_hama
+        snippets.value          = value
+        snippets.save()
+        serializer = CFPenggunaSerializer2(snippets)
+        return Response(serializer.data, status=201)
+
+    # def post(self, request, format=None):
+    #     serializer = CFPenggunaSerializer(data=request.data)
+    #     if serializer.is_valid():
+    #         serializer.save()
+    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class CFPenggunaDetailAPI(APIView):
+    """
+    Retrieve, update or delete a snippet instance.
+    """
+    def get_object(self, pk):
+        try:
+            return CFPengguna.objects.get(pk=pk)
+        except Snippet.DoesNotExist:
+            raise Http404
+
+    def get(self, request, pk, format=None):
+        snippet = self.get_object(pk)
+        serializer = CFPenggunaSerializer(snippet)
+        return Response(serializer.data)
+
+    def put(self, request, pk, format=None):
+        snippet = self.get_object(pk)
+        serializer = CFPenggunaSerializer(snippet, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk, format=None):
+        snippet = self.get_object(pk)
+        snippet.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 # -----------------------------------------------------------------------------------------------------------------
 def cf_formula(num1, num2):
+    if num1>=0 and num2>=0:
+        print('positive')
+        result = num1 + num2 * (1-num1)
+        return result
+    elif num1<=0 and num2<=0:
+        print('negative')
+        result = num1 + num2 + (num1*num2)
+        return result
+    elif num1*num2<0:
+        print('berlawanan')
+        result = (num1 + num2)/(1 - min(abs(num1),abs(num2)))
+        return result
 
-    result = num1 + num2 * (1-num1)
-    return result
 
 # @permission_classes([permissions.IsAuthenticated])
 # @authentication_classes([authentication.TokenAuthentication])
@@ -219,6 +314,15 @@ def diagnosis(request, id_masalah):
         
         data_masalah = Permasalahan.objects.get(id=id_masalah)
         data_cf_penggunas = CFPengguna.objects.filter(nama_masalah=data_masalah)
+        # print(len(data_cf_penggunas))
+        if(len(data_cf_penggunas)==0):
+            status = 404
+            response={
+                'status'                : status,
+                'data'                  : {},
+                'message'               : f'Error, input dulu gejalanya'
+            }
+            return Response(response, status)
         data_cf_pakars = CFPakar.objects.all()
         data_penyakits = JenisPenyakit.objects.all()
 
@@ -231,10 +335,15 @@ def diagnosis(request, id_masalah):
 
             cfs = []
             for cf_pakar in cfpakars:
-                cf_pengguna = data_cf_penggunas.get(hama__kode=cf_pakar.hama.kode)
-                # print(cf_pakar.hama.kode, cf_pakar.value)
-                # print(cf_pengguna.hama.kode, cf_pengguna.value)
-                cfs.append(cf_pakar.value * cf_pengguna.value)
+                try:
+                    cf_pengguna = data_cf_penggunas.get(hama__kode=cf_pakar.hama.kode)
+                    # print(cf_pakar.hama.kode, cf_pakar.value)
+                    # print(cf_pengguna.hama.kode, cf_pengguna.value)
+                    cfs.append(cf_pakar.value * cf_pengguna.value)
+                except:
+                    cfs.append(cf_pakar.value * 0.0)
+
+            print(cfs)
 
             cf_old = cfs[0]
             for x in range(1,len(cfs)):
@@ -245,13 +354,14 @@ def diagnosis(request, id_masalah):
                 penyakit = data_penyakit 
             
             cf_result.append({
-                'penyakit'      : data_penyakit.nama,
-                'presentase'    : round(cf_old*100,2)
+                "penyakit"      : data_penyakit.nama,
+                "presentase"    : round(cf_old*100,2)
             })
 
-        print(penyakit.nama, round(cf_min*100,2))
+        # print(penyakit.nama, round(cf_min*100,2))
         cf_result = list(reversed(sorted(cf_result, key=lambda k: k['presentase'])))
-        
+        cf_result = json.dumps(cf_result)
+        print(cf_result)
 
         data_masalah.jenis_penyakit.add(penyakit)
         data_masalah.penjelasan = cf_result
@@ -262,7 +372,7 @@ def diagnosis(request, id_masalah):
             'status'                : status,
             'data'                  : {
                 'identifikasi_penyakit' : penyakit.nama,
-                'presentase'            : (cf_min*100,2),
+                'presentase'            : round(cf_min*100,2),
                 'cf_result'             : cf_result,
             },
             'message'               : 'sukses'
@@ -286,11 +396,20 @@ def input_cf_pengguna(request):
         value           = request.POST['value']
 
 
+        print('Running')
+        # data_masalah = Permasalahan.objects.get(id=id_masalah)
+        # data_hama = Hama.objects.get(id=id_hama)
 
-        data_masalah = Permasalahan.objects.get(id=id_masalah)
-        data_hama = Hama.objects.get(id=id_hama)
+        try:
+            cf_pengguna = CFPengguna.objects.get(nama_masalah__id=id_masalah, hama__id=id_hama)
+            print(cf_pengguna.value)
 
-        cf_pengguna = CFPengguna()
+
+        except Exception as e:
+            print(e)            
+            print('ErroR')            
+            cf_pengguna = CFPengguna()
+
         cf_pengguna.nama_masalah    = Permasalahan.objects.get(id=id_masalah)
         cf_pengguna.hama            = Hama.objects.get(id=id_hama)
         cf_pengguna.value           = value

@@ -33,6 +33,7 @@ def send_notifications(sender, instance, *args, **kwargs):
 	message = {        
 		'title': instance.title,
 		'subtitle': instance.subtitle,
+		'is_readed': False,
 	}
 	print(message)
 	message = json.dumps(message)

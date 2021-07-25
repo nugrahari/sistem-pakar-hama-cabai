@@ -12,9 +12,11 @@ class WSConsumer(AsyncWebsocketConsumer):
 	    )
 		await self.accept()
 		
-		for i in range(4):
-			message ={
-				'data'	: i,
+		for i in range(1):
+			message = {        
+				'title': f'Selamat Datang Kembali',
+				'subtitle': f'Ini adalah aplikasi untuk diagnosa penyakit cabai',
+				'is_readed': False,
 			}
 			# await print('sending web socket')
 			await self.send(json.dumps(message))

@@ -4,6 +4,9 @@ from app_cabai.models import (
 	Hama,
 	Solusi,
 	Permasalahan,
+
+    CFPakar,
+    CFPengguna,
 ) 
 
 class JenisPenyakitSerializer(serializers.ModelSerializer):
@@ -26,7 +29,21 @@ class PermasalahanSerializer(serializers.ModelSerializer):
 		model = Permasalahan
 		fields = '__all__'
 
-		
+class CFPakarSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = CFPakar
+		fields = '__all__'
+
+class CFPenggunaSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = CFPengguna
+		fields = '__all__'
+
+class CFPenggunaSerializer2(serializers.ModelSerializer):
+	hama = HamaSerializer()
+	class Meta:
+		model = CFPengguna
+		fields = '__all__'
 
 
 
